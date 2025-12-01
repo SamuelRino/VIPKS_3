@@ -19,6 +19,7 @@ namespace VIPKS_3
     public partial class MainWindow : Window
     {
         Student _currentStudent;
+        StudentsContext _db = new StudentsContext();
 
         public MainWindow()
         {
@@ -47,40 +48,78 @@ namespace VIPKS_3
                 }
 
                 dg_Students.Focus();
+
+                tb_RecordCount.Text = $"Записей: {_db.Students.Count()}";
             }
         }
 
         private void btn_Add_Click(object sender, RoutedEventArgs e)
         {
+            gb_AddEditForm.Header = "Добавление записи";
+
             gb_AddEditForm.Visibility = Visibility.Visible;
 
-            _currentStudent = null;
+            _currentStudent = new Student();
 
             MainWindow f = this;
+
             f.DataContext = _currentStudent;
         }
 
         private void btn_Edit_Click(object sender, RoutedEventArgs e)
-        {
+        {           
             if (dg_Students.SelectedIndex != -1)
             {
+                gb_AddEditForm.Header = "Изменение записи";
+
                 gb_AddEditForm.Visibility = Visibility.Visible;
 
-                _currentStudent = ((Student)dg_Students.SelectedItem);               
+                _currentStudent = _db.Students.Find(((Student)dg_Students.SelectedItem).Id);               
 
                 MainWindow f = this;
-                f.DataContext = _currentStudent;
-            }           
+                f.DataContext = _currentStudent;           
+            }
+            else
+            {
+                MessageBox.Show("Выберите запись для изменения", "Предупреждение", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private void btn_Delete_Click(object sender, RoutedEventArgs e)
         {
+            if (dg_Students.SelectedIndex != -1)
+            {
+                MessageBoxResult res;
 
+                res = MessageBox.Show("Удалить запись?", "Удаление записи", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+                if (res == MessageBoxResult.Yes)
+                {
+                    try
+                    {
+                        Student row = (Student)dg_Students.SelectedItem;
+                        using (StudentsContext _db = new StudentsContext())
+                        {
+                            _db.Students.Remove(row);
+                            _db.SaveChanges();
+                        }
+                        LoadDBinDataGrid();
+                    }
+                    catch
+                    {
+                        MessageBox.Show("Ошибка удаления", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }               
+            }
+            else
+            {
+                MessageBox.Show("Выберите запись для удаления", "Предупреждение", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private void btn_Refresh_Click(object sender, RoutedEventArgs e)
         {
-
+            LoadDBinDataGrid();
         }
 
         private void btn_ClearSearch_Click(object sender, RoutedEventArgs e)
@@ -90,13 +129,39 @@ namespace VIPKS_3
 
         private void btn_Save_Click(object sender, RoutedEventArgs e)
         {
+            if (!string.IsNullOrEmpty(tb_FullName.Text) && !string.IsNullOrEmpty(tb_Group.Text) && !string.IsNullOrEmpty(cb_Course.Text) && !string.IsNullOrEmpty(cb_StudyForm.Text))
+            {
+                try
+                {                  
+                    if ((string)gb_AddEditForm.Header == "Добавление записи")
+                    {
+                        _db.Students.Add(_currentStudent);
+                        _db.SaveChanges();
+                    }
+                    else
+                    {
+                        _db.SaveChanges();
+                    }
+                    gb_AddEditForm.Visibility = Visibility.Hidden;
 
+                    LoadDBinDataGrid();
+                }
+                catch
+                {
+                    MessageBox.Show("Ошибка сохранения", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Заполните все поля корректными значениями", "Предупреждение", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private void btn_Cancel_Click(object sender, RoutedEventArgs e)
         {
-            gb_AddEditForm.Visibility = Visibility.Hidden; 
+            gb_AddEditForm.Visibility = Visibility.Hidden;
 
+            LoadDBinDataGrid();
         }
 
         private void tb_Search_TextChanged(object sender, TextChangedEventArgs e)
@@ -105,11 +170,6 @@ namespace VIPKS_3
         }
 
         private void cb_Filter_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-
-        }
-
-        private void dg_Students_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
 
         }
