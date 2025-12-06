@@ -26,7 +26,7 @@
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
             <TextBox x:Name="tb_Search" Width="200" Margin="0,0,10,0" Padding="5" 
                      TextChanged="tb_Search_TextChanged" 
-                     ToolTip="Поиск по ФИО или группе"/>
+                     ToolTip="Поиск по ФИО или группе" KeyDown="tb_Search_KeyDown"/>
             <ComboBox x:Name="cb_Filter" Width="120" Margin="0,0,10,0"
                       SelectionChanged="cb_Filter_SelectionChanged"
                       SelectedIndex="0">
@@ -38,15 +38,15 @@
         </StackPanel>
 
         <DataGrid Grid.Row="2" x:Name="dg_Students" AutoGenerateColumns="False" 
-                  CanUserAddRows="False">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50" IsReadOnly="True"/>
-                <DataGridTextColumn Header="ФИО" Binding="{Binding FullName}" Width="200" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Группа" Binding="{Binding Group}" Width="100" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Курс" Binding="{Binding Course}" Width="60" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Форма обучения" Binding="{Binding StudyForm}" Width="120" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Дата поступления" Binding="{Binding AdmissionDate, StringFormat=\{0:dd/MM/yyyy\}}" Width="120" IsReadOnly="True"/>
-                <DataGridCheckBoxColumn Header="Активный" Binding="{Binding IsActive}" Width="80" IsReadOnly="False"/>
+                  CanUserAddRows="False" IsReadOnly="True">
+            <DataGrid.Columns >
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
+                <DataGridTextColumn Header="ФИО" Binding="{Binding FullName}" Width="200"/>
+                <DataGridTextColumn Header="Группа" Binding="{Binding Group}" Width="100"/>
+                <DataGridTextColumn Header="Курс" Binding="{Binding Course}" Width="60"/>
+                <DataGridTextColumn Header="Форма обучения" Binding="{Binding StudyForm}" Width="120"/>
+                <DataGridTextColumn Header="Дата поступления" Binding="{Binding AdmissionDate, StringFormat=\{0:dd/MM/yyyy\}}" Width="120"/>
+                <DataGridCheckBoxColumn Header="Активный" Binding="{Binding IsActive}" Width="80"/>
             </DataGrid.Columns>
         </DataGrid>
 
@@ -58,6 +58,7 @@
                     <ColumnDefinition Width="0.3*"/>
                     <ColumnDefinition Width="0.8*"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="0.45*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
@@ -93,6 +94,11 @@
                 <StackPanel Grid.Column="4" Margin="5">
                     <Label Content="Дата поступления*"/>
                     <DatePicker x:Name="dp_AdmissionDate" Margin="0,0,0,10" SelectedDate="{Binding Path=AdmissionDate, StringFormat=\{0:dd/MM/yyyy\}}"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="5" Margin="5">
+                    <Label Content="Активный"/>
+                    <CheckBox HorizontalAlignment="Center" IsChecked="{Binding Path=IsActive}"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="6" Margin="5" VerticalAlignment="Bottom" Panel.ZIndex="0">

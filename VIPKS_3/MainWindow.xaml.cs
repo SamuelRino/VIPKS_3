@@ -24,6 +24,7 @@ namespace VIPKS_3
         public MainWindow()
         {
             InitializeComponent();
+            LoadDBinDataGrid();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -124,7 +125,8 @@ namespace VIPKS_3
 
         private void btn_ClearSearch_Click(object sender, RoutedEventArgs e)
         {
-
+            tb_Search.Clear();
+            tb_Search.Focus();
         }
 
         private void btn_Save_Click(object sender, RoutedEventArgs e)
@@ -166,12 +168,68 @@ namespace VIPKS_3
 
         private void tb_Search_TextChanged(object sender, TextChangedEventArgs e)
         {
+            List<Student> listItem = (List<Student>)dg_Students.ItemsSource;
 
+            var filtered = listItem.Where(p => p.FullName.Contains(tb_Search.Text) || p.Group.Contains(tb_Search.Text));
+
+            if (filtered.Count() > 0)
+            {
+                var item = filtered.First();
+
+                dg_Students.SelectedItem = item;
+
+                dg_Students.ScrollIntoView(item);
+            }
         }
 
         private void cb_Filter_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (dg_Students == null) return;
 
+            ComboBox cb = (ComboBox)sender;
+            switch (cb.SelectedIndex)
+            {
+                case 0:
+                    LoadDBinDataGrid();
+                    break;
+                case 1:
+                    using (StudentsContext _db = new StudentsContext())
+                    {
+                        var filtered = _db.Students.Where(p => p.StudyForm == "Очная");
+
+                        dg_Students.ItemsSource = filtered.ToList();
+                    }
+                    break;
+                case 2:
+                    using (StudentsContext _db = new StudentsContext())
+                    {
+                        var filtered = _db.Students.Where(p => p.StudyForm == "Заочная");
+
+                        dg_Students.ItemsSource = filtered.ToList();
+                    }
+                    break;
+            }
+        }
+
+        private void tb_Search_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                List<Student> listItem = (List<Student>)dg_Students.ItemsSource;
+
+                var filtered = listItem.Where(p => p.FullName.Contains(tb_Search.Text) || p.Group.Contains(tb_Search.Text));
+
+                if (filtered.Count() > 0)
+                {
+                    var item = filtered.First();
+
+                    dg_Students.SelectedItem = item;
+
+                    dg_Students.ScrollIntoView(item);
+
+                    dg_Students.Focus();
+                }
+            }
         }
     }
 }
