@@ -210,26 +210,5 @@ namespace VIPKS_3
                     break;
             }
         }
-
-        private void tb_Search_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Enter)
-            {
-                List<Student> listItem = (List<Student>)dg_Students.ItemsSource;
-
-                var filtered = listItem.Where(p => p.FullName.Contains(tb_Search.Text) || p.Group.Contains(tb_Search.Text));
-
-                if (filtered.Count() > 0)
-                {
-                    var item = filtered.First();
-
-                    dg_Students.SelectedItem = item;
-
-                    dg_Students.ScrollIntoView(item);
-
-                    dg_Students.Focus();
-                }
-            }
-        }
     }
 }

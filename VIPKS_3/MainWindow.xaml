@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VIPKS_3"
         mc:Ignorable="d"
-        Title="Управление студентами" Height="600" Width="900" Loaded="Window_Loaded">
+        Title="Управление студентами" Height="600" Width="900" Loaded="Window_Loaded" WindowStartupLocation="CenterScreen">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -26,7 +26,7 @@
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
             <TextBox x:Name="tb_Search" Width="200" Margin="0,0,10,0" Padding="5" 
                      TextChanged="tb_Search_TextChanged" 
-                     ToolTip="Поиск по ФИО или группе" KeyDown="tb_Search_KeyDown"/>
+                     ToolTip="Поиск по ФИО или группе"/>
             <ComboBox x:Name="cb_Filter" Width="120" Margin="0,0,10,0"
                       SelectionChanged="cb_Filter_SelectionChanged"
                       SelectedIndex="0">
