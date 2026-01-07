@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -19,7 +21,8 @@ namespace VIPKS_3
     public partial class MainWindow : Window
     {
         Student _currentStudent;
-        StudentsContext _db = new StudentsContext();
+        List<Student> _studentsList = new List<Student>();
+        readonly ApiService _apiService = new ApiService();
 
         public MainWindow()
         {
@@ -32,26 +35,23 @@ namespace VIPKS_3
             LoadDBinDataGrid();
         }
 
-        private void LoadDBinDataGrid()
+        private async Task LoadDBinDataGrid()
         {
-            using (StudentsContext _db = new StudentsContext())
+            _studentsList = await _apiService.GetStudentsAsync();
+
+            int selectedIndex = dg_Students.SelectedIndex;
+            dg_Students.ItemsSource = _studentsList;
+
+            if (selectedIndex != -1)
             {
-                int selectedIndex = dg_Students.SelectedIndex;
-                dg_Students.ItemsSource = _db.Students.ToList();
+                if (selectedIndex >= dg_Students.Items.Count) selectedIndex = dg_Students.Items.Count - 1;
 
-                if (selectedIndex != -1)
-                {
-                    if (selectedIndex >= dg_Students.Items.Count) selectedIndex = dg_Students.Items.Count - 1;
-
-                    dg_Students.SelectedIndex = selectedIndex;
-
-                    dg_Students.ScrollIntoView(dg_Students.SelectedItem);
-                }
-
-                dg_Students.Focus();
-
-                tb_RecordCount.Text = $"Записей: {_db.Students.Count()}";
+                dg_Students.SelectedIndex = selectedIndex;
+                dg_Students.ScrollIntoView(dg_Students.SelectedItem);
             }
+
+            dg_Students.Focus();
+            tb_RecordCount.Text = $"Записей: {_studentsList.Count}";
         }
 
         private void btn_Add_Click(object sender, RoutedEventArgs e)
@@ -62,12 +62,10 @@ namespace VIPKS_3
 
             _currentStudent = new Student();
 
-            MainWindow f = this;
-
-            f.DataContext = _currentStudent;
+            DataContext = _currentStudent;
         }
 
-        private void btn_Edit_Click(object sender, RoutedEventArgs e)
+        private async void btn_Edit_Click(object sender, RoutedEventArgs e)
         {           
             if (dg_Students.SelectedIndex != -1)
             {
@@ -75,10 +73,11 @@ namespace VIPKS_3
 
                 gb_AddEditForm.Visibility = Visibility.Visible;
 
-                _currentStudent = _db.Students.Find(((Student)dg_Students.SelectedItem).Id);               
+                var selectedStudent = (Student)dg_Students.SelectedItem;
 
-                MainWindow f = this;
-                f.DataContext = _currentStudent;           
+                _currentStudent = await _apiService.GetStudentAsync(selectedStudent.Id);
+
+                DataContext = _currentStudent;
             }
             else
             {
@@ -86,7 +85,7 @@ namespace VIPKS_3
             }
         }
 
-        private void btn_Delete_Click(object sender, RoutedEventArgs e)
+        private async void btn_Delete_Click(object sender, RoutedEventArgs e)
         {
             if (dg_Students.SelectedIndex != -1)
             {
@@ -99,12 +98,9 @@ namespace VIPKS_3
                     try
                     {
                         Student row = (Student)dg_Students.SelectedItem;
-                        using (StudentsContext _db = new StudentsContext())
-                        {
-                            _db.Students.Remove(row);
-                            _db.SaveChanges();
-                        }
-                        LoadDBinDataGrid();
+                        
+                        await _apiService.RemoveStudentAsync(row.Id);
+                        await LoadDBinDataGrid();
                     }
                     catch
                     {
@@ -118,9 +114,9 @@ namespace VIPKS_3
             }
         }
 
-        private void btn_Refresh_Click(object sender, RoutedEventArgs e)
+        private async void btn_Refresh_Click(object sender, RoutedEventArgs e)
         {
-            LoadDBinDataGrid();
+            await LoadDBinDataGrid();
         }
 
         private void btn_ClearSearch_Click(object sender, RoutedEventArgs e)
@@ -129,7 +125,7 @@ namespace VIPKS_3
             tb_Search.Focus();
         }
 
-        private void btn_Save_Click(object sender, RoutedEventArgs e)
+        private async void btn_Save_Click(object sender, RoutedEventArgs e)
         {
             if (!string.IsNullOrEmpty(tb_FullName.Text) && !string.IsNullOrEmpty(tb_Group.Text) && !string.IsNullOrEmpty(cb_Course.Text) && !string.IsNullOrEmpty(cb_StudyForm.Text))
             {
@@ -137,16 +133,15 @@ namespace VIPKS_3
                 {                  
                     if ((string)gb_AddEditForm.Header == "Добавление записи")
                     {
-                        _db.Students.Add(_currentStudent);
-                        _db.SaveChanges();
+                        await _apiService.CreateStudentAsync(_currentStudent);
                     }
                     else
                     {
-                        _db.SaveChanges();
+                        await _apiService.UpdateStudentAsync(_currentStudent.Id, _currentStudent);
                     }
                     gb_AddEditForm.Visibility = Visibility.Hidden;
 
-                    LoadDBinDataGrid();
+                    await LoadDBinDataGrid();
                 }
                 catch
                 {
@@ -159,20 +154,20 @@ namespace VIPKS_3
             }
         }
 
-        private void btn_Cancel_Click(object sender, RoutedEventArgs e)
+        private async void btn_Cancel_Click(object sender, RoutedEventArgs e)
         {
             gb_AddEditForm.Visibility = Visibility.Hidden;
 
-            LoadDBinDataGrid();
+            await LoadDBinDataGrid();
         }
 
         private void tb_Search_TextChanged(object sender, TextChangedEventArgs e)
         {
             List<Student> listItem = (List<Student>)dg_Students.ItemsSource;
 
-            var filtered = listItem.Where(p => p.FullName.Contains(tb_Search.Text) || p.Group.Contains(tb_Search.Text));
+            var filtered = listItem.Where(p => p.FullName.Contains(tb_Search.Text, StringComparison.OrdinalIgnoreCase) || p.Group.Contains(tb_Search.Text, StringComparison.OrdinalIgnoreCase));
 
-            if (filtered.Count() > 0)
+            if (filtered.Any())
             {
                 var item = filtered.First();
 
@@ -182,33 +177,40 @@ namespace VIPKS_3
             }
         }
 
-        private void cb_Filter_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void cb_Filter_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (dg_Students == null) return;
 
             ComboBox cb = (ComboBox)sender;
+
+            _studentsList = await _apiService.GetStudentsAsync();
+
+
             switch (cb.SelectedIndex)
             {
                 case 0:
                     LoadDBinDataGrid();
                     break;
                 case 1:
-                    using (StudentsContext _db = new StudentsContext())
-                    {
-                        var filtered = _db.Students.Where(p => p.StudyForm == "Очная");
-
-                        dg_Students.ItemsSource = filtered.ToList();
-                    }
+                    var filtered = _studentsList.Where(p => p.StudyForm == "Очная");
+                    dg_Students.ItemsSource = filtered.ToList();
+                    tb_RecordCount.Text = $"Записей: {filtered.Count()}";
                     break;
-                case 2:
-                    using (StudentsContext _db = new StudentsContext())
-                    {
-                        var filtered = _db.Students.Where(p => p.StudyForm == "Заочная");
-
-                        dg_Students.ItemsSource = filtered.ToList();
-                    }
+                case 2:                   
+                    filtered = _studentsList.Where(p => p.StudyForm == "Заочная");
+                    dg_Students.ItemsSource = filtered.ToList();
+                    tb_RecordCount.Text = $"Записей: {filtered.Count()}";
                     break;
             }
+        }
+
+        private async void btn_UpCourse_Click(object sender, RoutedEventArgs e)
+        {
+            await _apiService.UpCourseStudentsAsync();
+
+            await LoadDBinDataGrid();
+
+            MessageBox.Show("Курс студентов успешно повышен", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }
