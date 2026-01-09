@@ -11,7 +11,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using VIPKS_3.ModelsDB;
 
 namespace VIPKS_3
 {
@@ -22,7 +21,13 @@ namespace VIPKS_3
     {
         Student _currentStudent;
         List<Student> _studentsList = new List<Student>();
+        List<User> _usersList = new List<User>();
         readonly ApiService _apiService = new ApiService();
+
+        public static class Data
+        {
+            public static User? user;
+        }
 
         public MainWindow()
         {
@@ -30,14 +35,26 @@ namespace VIPKS_3
             LoadDBinDataGrid();
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            LoadDBinDataGrid();
+            await LoadDBinDataGrid();
+            if (!ApiService.IsAdmin)
+            {
+                btn_Add.IsEnabled = false;
+                btn_Edit.IsEnabled = false;
+                btn_Delete.IsEnabled = false;
+                btn_UpCourse.Visibility = Visibility.Hidden;
+                tabUsers.Visibility = Visibility.Hidden;
+            }              
         }
 
         private async Task LoadDBinDataGrid()
         {
             _studentsList = await _apiService.GetStudentsAsync();
+
+            _usersList = await _apiService.GetUsersAsync();
+
+            dg_Users.ItemsSource = _usersList;
 
             int selectedIndex = dg_Students.SelectedIndex;
             dg_Students.ItemsSource = _studentsList;
@@ -56,61 +73,121 @@ namespace VIPKS_3
 
         private void btn_Add_Click(object sender, RoutedEventArgs e)
         {
-            gb_AddEditForm.Header = "Добавление записи";
-
-            gb_AddEditForm.Visibility = Visibility.Visible;
-
-            _currentStudent = new Student();
-
-            DataContext = _currentStudent;
-        }
-
-        private async void btn_Edit_Click(object sender, RoutedEventArgs e)
-        {           
-            if (dg_Students.SelectedIndex != -1)
+            if (tabs.SelectedItem == tabStudents)
             {
-                gb_AddEditForm.Header = "Изменение записи";
+                gb_AddEditForm.Header = "Добавление записи";
 
                 gb_AddEditForm.Visibility = Visibility.Visible;
 
-                var selectedStudent = (Student)dg_Students.SelectedItem;
-
-                _currentStudent = await _apiService.GetStudentAsync(selectedStudent.Id);
+                _currentStudent = new Student() { AdmissionDate = new(1970, 1, 1) };
 
                 DataContext = _currentStudent;
             }
-            else
+
+            if (tabs.SelectedItem == tabUsers)
             {
-                MessageBox.Show("Выберите запись для изменения", "Предупреждение", MessageBoxButton.OK, MessageBoxImage.Warning);
+                RegisterWindow w = new RegisterWindow(_apiService);
+
+                if (w.ShowDialog() == true)
+                {
+                    MessageBox.Show("Пользователь успешно добавлен", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }            
+        }
+
+        private async void btn_Edit_Click(object sender, RoutedEventArgs e)
+        {
+            if (tabs.SelectedItem == tabStudents)
+            {
+                if (dg_Students.SelectedIndex != -1)
+                {
+                    gb_AddEditForm.Header = "Изменение записи";
+
+                    gb_AddEditForm.Visibility = Visibility.Visible;
+
+                    var selectedStudent = (Student)dg_Students.SelectedItem;
+
+                    _currentStudent = await _apiService.GetStudentAsync(selectedStudent.Id);
+
+                    DataContext = _currentStudent;
+                }
+                else
+                {
+                    MessageBox.Show("Выберите запись для изменения", "Предупреждение", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            
+            if (tabs.SelectedItem == tabUsers)
+            {
+                if (dg_Users.SelectedIndex != -1)
+                {
+
+                }
+                else
+                {
+                    MessageBox.Show("Выберите запись для изменения", "Предупреждение", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
             }
         }
 
         private async void btn_Delete_Click(object sender, RoutedEventArgs e)
         {
-            if (dg_Students.SelectedIndex != -1)
+            if (tabs.SelectedItem == tabStudents)
             {
-                MessageBoxResult res;
-
-                res = MessageBox.Show("Удалить запись?", "Удаление записи", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-
-                if (res == MessageBoxResult.Yes)
+                if (dg_Students.SelectedIndex != -1)
                 {
-                    try
+                    MessageBoxResult res;
+
+                    res = MessageBox.Show("Удалить запись?", "Удаление записи", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+                    if (res == MessageBoxResult.Yes)
                     {
-                        Student row = (Student)dg_Students.SelectedItem;
-                        
-                        await _apiService.RemoveStudentAsync(row.Id);
-                        await LoadDBinDataGrid();
+                        try
+                        {
+                            Student row = (Student)dg_Students.SelectedItem;
+
+                            await _apiService.RemoveStudentAsync(row.Id);
+                            await LoadDBinDataGrid();
+                        }
+                        catch
+                        {
+                            MessageBox.Show("Ошибка удаления", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
                     }
-                    catch
-                    {
-                        MessageBox.Show("Ошибка удаления", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
-                }               
+                }
+                else
+                {
+                    MessageBox.Show("Выберите запись для удаления", "Предупреждение", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
             }
-            else
+
+            if (tabs.SelectedItem == tabUsers)
             {
-                MessageBox.Show("Выберите запись для удаления", "Предупреждение", MessageBoxButton.OK, MessageBoxImage.Warning);
+                if (dg_Users.SelectedIndex != -1)
+                {
+                    MessageBoxResult res;
+
+                    res = MessageBox.Show("Удалить пользователя?", "Удаление пользователя", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+                    if (res == MessageBoxResult.Yes)
+                    {
+                        try
+                        {
+                            User row = (User)dg_Users.SelectedItem;
+
+                            await _apiService.RemoveUserAsync(row.UserId);
+                            await LoadDBinDataGrid();
+                        }
+                        catch
+                        {
+                            MessageBox.Show("Ошибка удаления", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Выберите запись для удаления", "Предупреждение", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
             }
         }
 
@@ -211,6 +288,25 @@ namespace VIPKS_3
             await LoadDBinDataGrid();
 
             MessageBox.Show("Курс студентов успешно повышен", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private async void btnResetPassword_Click(object sender, RoutedEventArgs e)
+        {
+            if (dg_Users.SelectedIndex != -1)
+            {
+                MessageBoxResult res;
+
+                res = MessageBox.Show("Вы уверены, что хотите поменять пароль?", "Сброс пароля", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+                if (res == MessageBoxResult.Yes)
+                {
+                    
+                }
+            }
+            else
+            {
+                MessageBox.Show("Выберите пользователя", "Предупреждение", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
     }
 }

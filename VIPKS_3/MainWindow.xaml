@@ -9,7 +9,6 @@
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -19,39 +18,79 @@
             <TextBlock Text="База данных студентов" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
             <Button x:Name="btn_Add" Content="Добавить" Margin="20,5,5,5" Padding="10,5" Click="btn_Add_Click"/>
             <Button x:Name="btn_Edit" Content="Редактировать" Margin="5" Padding="10,5" Click="btn_Edit_Click"/>
-            <Button x:Name="btn_UpCourse" Content="Перевести всех на следующий курс" Margin="5" Padding="10,5" Click="btn_UpCourse_Click"/>
             <Button x:Name="btn_Delete" Content="Удалить" Margin="5" Padding="10,5" Click="btn_Delete_Click"/>
             <Button x:Name="btn_Refresh" Content="Обновить" Margin="5" Padding="10,5" Click="btn_Refresh_Click"/>
         </StackPanel>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
-            <TextBox x:Name="tb_Search" Width="200" Margin="0,0,10,0" Padding="5" 
-                     TextChanged="tb_Search_TextChanged" 
-                     ToolTip="Поиск по ФИО или группе"/>
-            <ComboBox x:Name="cb_Filter" Width="120" Margin="0,0,10,0"
-                      SelectionChanged="cb_Filter_SelectionChanged"
-                      SelectedIndex="0">
-                <ComboBoxItem Content="Все студенты"/>
-                <ComboBoxItem Content="Очная форма"/>
-                <ComboBoxItem Content="Заочная форма"/>
-            </ComboBox>
-            <Button x:Name="btn_ClearSearch" Content="Очистить" Click="btn_ClearSearch_Click" />
-        </StackPanel>
+        <Grid Grid.Row="1">
+            <TabControl x:Name="tabs">
+                <TabItem Header="Студенты" x:Name="tabStudents">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
 
-        <DataGrid Grid.Row="2" x:Name="dg_Students" AutoGenerateColumns="False" 
-                  CanUserAddRows="False" IsReadOnly="True">
-            <DataGrid.Columns >
-                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
-                <DataGridTextColumn Header="ФИО" Binding="{Binding FullName}" Width="200"/>
-                <DataGridTextColumn Header="Группа" Binding="{Binding Group}" Width="100"/>
-                <DataGridTextColumn Header="Курс" Binding="{Binding Course}" Width="60"/>
-                <DataGridTextColumn Header="Форма обучения" Binding="{Binding StudyForm}" Width="120"/>
-                <DataGridTextColumn Header="Дата поступления" Binding="{Binding AdmissionDate, StringFormat=\{0:dd/MM/yyyy\}}" Width="120"/>
-                <DataGridCheckBoxColumn Header="Активный" Binding="{Binding IsActive}" Width="80"/>
-            </DataGrid.Columns>
-        </DataGrid>
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10" Grid.ColumnSpan="2">
+                            <TextBox x:Name="tb_Search" Width="200" Margin="0,0,10,0" Padding="5" 
+             TextChanged="tb_Search_TextChanged" 
+             ToolTip="Поиск по ФИО или группе"/>
+                            <ComboBox x:Name="cb_Filter" Width="120" Margin="0,0,10,0"
+              SelectionChanged="cb_Filter_SelectionChanged"
+              SelectedIndex="0">
+                                <ComboBoxItem Content="Все студенты"/>
+                                <ComboBoxItem Content="Очная форма"/>
+                                <ComboBoxItem Content="Заочная форма"/>
+                            </ComboBox>
+                            <Button x:Name="btn_ClearSearch" Content="Очистить" Click="btn_ClearSearch_Click" />
+                            <Button x:Name="btn_UpCourse" Content="Перевести всех на следующий курс" Margin="20,0,0,0" Click="btn_UpCourse_Click"/>
+                        </StackPanel>
 
-        <GroupBox x:Name="gb_AddEditForm" Grid.Row="3" Margin="0,10,0,0" Visibility="Hidden">
+                        <DataGrid Grid.Row="1" x:Name="dg_Students" AutoGenerateColumns="False" 
+          CanUserAddRows="False" IsReadOnly="True" Grid.ColumnSpan="2">
+                            <DataGrid.Columns >
+                                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
+                                <DataGridTextColumn Header="ФИО" Binding="{Binding FullName}" Width="200"/>
+                                <DataGridTextColumn Header="Группа" Binding="{Binding Group}" Width="100"/>
+                                <DataGridTextColumn Header="Курс" Binding="{Binding Course}" Width="60"/>
+                                <DataGridTextColumn Header="Форма обучения" Binding="{Binding StudyForm}" Width="120"/>
+                                <DataGridTextColumn Header="Дата поступления" Binding="{Binding AdmissionDate, StringFormat=\{0:dd/MM/yyyy\}}" Width="120"/>
+                                <DataGridCheckBoxColumn Header="Активный" Binding="{Binding IsActive}" Width="80"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </TabItem>
+
+                <TabItem Header="Пользователи" x:Name="tabUsers">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <Button x:Name="btnResetPassword" Width="120" HorizontalAlignment="Left" Content="Сбросить пароль" Margin="5" Click="btnResetPassword_Click"/>
+
+                        <DataGrid Grid.Row="1" x:Name="dg_Users" AutoGenerateColumns="False" 
+CanUserAddRows="False" IsReadOnly="True">
+                            <DataGrid.Columns >
+                                <DataGridTextColumn Header="ID" Binding="{Binding UserId}" Width="30"/>
+                                <DataGridTextColumn Header="Username" Binding="{Binding Username}" Width="150"/>
+                                <DataGridTextColumn Header="Логин" Binding="{Binding UserLogin}" Width="150"/>
+                                <DataGridTextColumn Header="Роль" Binding="{Binding UserRoleNavigation.RoleName}" Width="60"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </TabItem>
+            </TabControl>
+        </Grid>
+
+
+
+        <GroupBox x:Name="gb_AddEditForm" Grid.Row="2" Margin="0,10,0,0" Visibility="Hidden">
             <Grid Margin="5">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
