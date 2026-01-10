@@ -17,17 +17,18 @@ namespace VIPKS_3
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
+    /// 
+    public static class Data
+    {
+        public static User? user;
+    }
+
     public partial class MainWindow : Window
     {
         Student _currentStudent;
         List<Student> _studentsList = new List<Student>();
         List<User> _usersList = new List<User>();
         readonly ApiService _apiService = new ApiService();
-
-        public static class Data
-        {
-            public static User? user;
-        }
 
         public MainWindow()
         {
@@ -71,7 +72,7 @@ namespace VIPKS_3
             tb_RecordCount.Text = $"Записей: {_studentsList.Count}";
         }
 
-        private void btn_Add_Click(object sender, RoutedEventArgs e)
+        private async void btn_Add_Click(object sender, RoutedEventArgs e)
         {
             if (tabs.SelectedItem == tabStudents)
             {
@@ -92,6 +93,8 @@ namespace VIPKS_3
                 {
                     MessageBox.Show("Пользователь успешно добавлен", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
+
+                await LoadDBinDataGrid();
             }            
         }
 
@@ -121,11 +124,20 @@ namespace VIPKS_3
             {
                 if (dg_Users.SelectedIndex != -1)
                 {
+                    Data.user = (User)dg_Users.SelectedItem;
 
+                    EditUserWindow w = new(_apiService);
+
+                    if (w.ShowDialog() == true)
+                    {
+                        MessageBox.Show("Пользователь успешно изменён", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+
+                    await LoadDBinDataGrid();
                 }
                 else
                 {
-                    MessageBox.Show("Выберите запись для изменения", "Предупреждение", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Выберите пользователя для изменения", "Предупреждение", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
         }
@@ -300,7 +312,14 @@ namespace VIPKS_3
 
                 if (res == MessageBoxResult.Yes)
                 {
-                    
+                    Data.user = (User)dg_Users.SelectedItem;
+
+                    ResetPasswordWindow w = new(_apiService);
+
+                    if (w.ShowDialog() == true)
+                    {
+                        MessageBox.Show("Пароль успешно изменён", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
                 }
             }
             else

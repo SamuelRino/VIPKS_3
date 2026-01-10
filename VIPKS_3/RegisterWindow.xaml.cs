@@ -40,11 +40,11 @@ namespace VIPKS_3
 
                 if (admin)
                 {
-                    await _apiService.ChangeUserRoleAsync(login, 1);
+                    await _apiService.ChangeUserRoleAsync(login, 1);       
+                }
 
-                    DialogResult = true;
-                    Close();
-                }               
+                DialogResult = true;
+                Close();
             }
             else
             {
