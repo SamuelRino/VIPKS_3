@@ -11,6 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using VIPKS_3.Classes;
 
 namespace VIPKS_3
 {
@@ -295,11 +296,18 @@ namespace VIPKS_3
 
         private async void btn_UpCourse_Click(object sender, RoutedEventArgs e)
         {
-            await _apiService.UpCourseStudentsAsync();
+            MessageBoxResult res;
 
-            await LoadDBinDataGrid();
+            res = MessageBox.Show("Вы уверены, что хотите перевести активных студентов на следующий курс?", "Перевод на следующий курс", MessageBoxButton.YesNo, MessageBoxImage.Warning);
 
-            MessageBox.Show("Курс студентов успешно повышен", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (res == MessageBoxResult.Yes)
+            {
+                await _apiService.UpCourseStudentsAsync();
+
+                await LoadDBinDataGrid();
+
+                MessageBox.Show("Курс студентов успешно повышен", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+            }            
         }
 
         private async void btnResetPassword_Click(object sender, RoutedEventArgs e)
